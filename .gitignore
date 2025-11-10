@@ -1,0 +1,8 @@
+node_modules/
+dist/
+*.log
+.env
+*.json
+!package.json
+!tsconfig.json
+!ra.config.example.ts

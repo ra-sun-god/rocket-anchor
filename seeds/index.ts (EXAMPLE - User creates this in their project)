@@ -1,0 +1,42 @@
+import { SeedConfig } from 'rocket-anchor';
+
+export const seeds: SeedConfig[] = [
+  {
+    program: 'counter_program',
+    initialize: {
+      function: 'initialize',
+      accounts: {
+        counter: 'pda:counter',
+        authority: 'signer',
+        systemProgram: 'systemProgram',
+      },
+      args: [0], // initial_count
+    },
+    seeds: [
+      {
+        function: 'increment',
+        accounts: {
+          counter: 'pda:counter',
+          authority: 'signer',
+        },
+        args: [],
+        repeat: 5, // Increment 5 times
+      },
+    ],
+  },
+  {
+    program: 'token_vault',
+    initialize: {
+      function: 'initializeVault',
+      accounts: {
+        authority: 'signer',
+        vault: 'pda:vault',
+        systemProgram: 'systemProgram',
+        rent: 'rent',
+      },
+      args: [1000], // fee_basis_points
+    },
+  },
+];
+
+export default seeds;

@@ -1,0 +1,42 @@
+import { RAConfig } from 'rocket-anchor';
+
+const config: RAConfig = {
+  networks: {
+    localnet: {
+      url: 'http://127.0.0.1:8899',
+      accounts: ['~/.config/solana/id.json'],
+      commitment: 'confirmed',
+    },
+    devnet: {
+      url: 'https://api.devnet.solana.com',
+      accounts: ['~/.config/solana/devnet.json'],
+      commitment: 'confirmed',
+      timeout: 60000,
+    },
+    testnet: {
+      url: 'https://api.testnet.solana.com',
+      accounts: ['~/.config/solana/testnet.json'],
+      commitment: 'confirmed',
+    },
+    mainnet: {
+      url: 'https://api.mainnet-beta.solana.com',
+      accounts: ['~/.config/solana/mainnet.json'],
+      commitment: 'finalized',
+      skipPreflight: false,
+      timeout: 90000,
+    },
+  },
+  paths: {
+    programs: './programs',
+    tests: './tests',
+    artifacts: './target',
+  },
+  solana: {
+    version: '1.18.0',
+  },
+  anchor: {
+    version: '0.29.0',
+  },
+};
+
+export default config;

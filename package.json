@@ -1,0 +1,39 @@
+{
+  "name": "rocket-anchor",
+  "version": "1.0.0",
+  "description": "Hardhat-style deployment tool for Solana Anchor programs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "ra": "./bin/ra.js"
+  },
+  "files": ["dist", "bin", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/cli.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["solana", "anchor", "deployment", "hardhat", "web3", "seeding"],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.29.0",
+    "@solana/web3.js": "^1.87.0",
+    "commander": "^11.0.0",
+    "chalk": "^4.1.2",
+    "bs58": "^5.0.0",
+    "ora": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0"
+  },
+  "peerDependencies": {
+    "@coral-xyz/anchor": ">=0.28.0",
+    "@solana/web3.js": ">=1.80.0"
+  }
+}
