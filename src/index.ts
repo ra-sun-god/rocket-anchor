@@ -13,6 +13,9 @@
 import { DeployOptions, DeployResult, RAConfig } from './types';
 
 export { 
+  RAConfig, 
+  NetworkConfig, 
+  DeployOptions, 
   ProgramInfo, 
   DeployResult,
   SeedConfig,
