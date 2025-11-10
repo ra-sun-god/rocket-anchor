@@ -14,7 +14,7 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": ["solana", "anchor", "deployment", "hardhat", "web3", "seeding"],
-  "author": "Your Name <your.email@example.com>",
+  "author": "ra<ra@maxxpainn.com>",
   "license": "MIT",
   "engines": {
     "node": ">=16.0.0"
