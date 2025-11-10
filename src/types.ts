@@ -1,3 +1,15 @@
+/**
+ * @project Anchor Rocket (RA)
+ * @file types.ts
+ * @description TypeScript type definitions for the RocketAnchor deployment toolkit.
+ * Defines interfaces for configuration, deployment options, and seed configurations.
+ * 
+ * @author Ra <ra@maxxpainn.com>
+ * @created 2025-11-10
+ * 
+ * License: MIT
+ */
+
 import { Commitment } from '@solana/web3.js';
 
 export interface NetworkConfig {

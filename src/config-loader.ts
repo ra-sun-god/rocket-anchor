@@ -1,13 +1,15 @@
 /**
  * @project Anchor Rocket (RA)
  * @file config-loader.ts
- * @description Loads and parse configuration file from user 
+ * @description Configuration loader for RocketAnchor. Loads and validates
+ * ra.config.ts or ra.config.js files from the project root.
  * 
- * @author Ra<ra@maxxpainn.com>
+ * @author Ra <ra@maxxpainn.com>
  * @created 2025-11-10
  * 
  * License: MIT
  */
+
 import * as path from 'path';
 import * as fs from 'fs';
 import { RAConfig } from './types';

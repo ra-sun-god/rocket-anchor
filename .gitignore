@@ -6,3 +6,5 @@ dist/
 !package.json
 !tsconfig.json
 !ra.config.example.ts
+.DS_Store
+*.swp

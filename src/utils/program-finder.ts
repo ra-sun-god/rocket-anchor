@@ -1,3 +1,15 @@
+/**
+ * @project Anchor Rocket (RA)
+ * @file utils/program-finder.ts
+ * @description Program discovery utilities for RocketAnchor. Scans the target
+ * directory to find compiled Anchor programs and their associated keypairs.
+ * 
+ * @author Ra <ra@maxxpainn.com>
+ * @created 2025-11-10
+ * 
+ * License: MIT
+ */
+
 import * as fs from 'fs';
 import * as path from 'path';
 import { RAConfig, ProgramInfo } from '../types';

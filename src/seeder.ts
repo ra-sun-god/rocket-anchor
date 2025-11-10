@@ -1,9 +1,11 @@
-
 /**
  * @project Anchor Rocket (RA)
  * @file seeder.ts
- * @description Runs program seed scripts using Anchor and Solana Web3.  Handles initialization, PDA creation, and iterative seed execution.
- * @author Ra<ra@maxxpainn.com>
+ * @description Seeding and initialization logic for RocketAnchor. Handles
+ * automatic program initialization and seed data population using declarative
+ * configuration or custom scripts.
+ * 
+ * @author Ra <ra@maxxpainn.com>
  * @created 2025-11-10
  * 
  * License: MIT

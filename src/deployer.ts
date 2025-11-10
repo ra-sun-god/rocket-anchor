@@ -1,3 +1,15 @@
+/**
+ * @project Anchor Rocket (RA)
+ * @file deployer.ts
+ * @description Deployment logic for RocketAnchor. Handles building, deploying,
+ * and verifying Anchor programs to various Solana networks.
+ * 
+ * @author Ra <ra@maxxpainn.com>
+ * @created 2025-11-10
+ * 
+ * License: MIT
+ */
+
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import { execSync } from 'child_process';
 import { RAConfig, DeployOptions, ProgramInfo, DeployResult } from './types';

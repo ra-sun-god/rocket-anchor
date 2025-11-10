@@ -1,9 +1,10 @@
 /**
  * @project Anchor Rocket (RA)
  * @file keypair-loader.ts
- * @description Loads a Solana Keypair from a file path or base58 string.
+ * @description Keypair loading utilities for RocketAnchor. Supports loading
+ * keypairs from file paths, base58 strings, and resolving ~ paths.
  * 
- * @author Ra<ra@maxxpainn.com>
+ * @author Ra <ra@maxxpainn.com>
  * @created 2025-11-10
  * 
  * License: MIT

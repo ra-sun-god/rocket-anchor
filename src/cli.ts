@@ -1,5 +1,16 @@
+/**
+ * @project Anchor Rocket (RA)
+ * @file cli.ts
+ * @description Command-line interface for RocketAnchor. Provides CLI commands
+ * for deployment, seeding, building, testing, and initialization.
+ * 
+ * @author Ra <ra@maxxpainn.com>
+ * @created 2025-11-10
+ * 
+ * License: MIT
+ */
+
 import { Command } from 'commander';
-import chalk from 'chalk';
 import { deploy } from './deployer';
 import { loadConfig } from './config-loader';
 import { runSeeds } from './seeder';

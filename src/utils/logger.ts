@@ -1,3 +1,15 @@
+/**
+ * @project Anchor Rocket (RA)
+ * @file utils/logger.ts
+ * @description Logging utilities with colored console output for RocketAnchor.
+ * Provides formatted logging methods for deployment and seeding operations.
+ * 
+ * @author Ra <ra@maxxpainn.com>
+ * @created 2025-11-10
+ * 
+ * License: MIT
+ */
+
 import chalk from 'chalk';
 
 export interface Logger {

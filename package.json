@@ -1,7 +1,7 @@
 {
   "name": "rocket-anchor",
   "version": "1.0.0",
-  "description": "Hardhat-style deployment tool for Solana Anchor programs",
+  "description": "Hardhat-style deployment tool for Solana Anchor programs with seeding support",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -11,10 +11,21 @@
   "scripts": {
     "build": "tsc",
     "dev": "ts-node src/cli.ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "jest"
   },
-  "keywords": ["solana", "anchor", "deployment", "hardhat", "web3", "seeding"],
-  "author": "ra<ra@maxxpainn.com>",
+  "keywords": ["solana", "anchor", "deployment", "hardhat", "web3", "seeding", "blockchain", "devtools"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ra-sun-gold/rocket-anchor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ra-sun-gold/rocket-anchor/issues"
+  },
+  "homepage": "https://github.com/ra-sun-gold/rocket-anchor#readme",
+  "author": "Ra <ra@maxxpainn.com>",
   "license": "MIT",
   "engines": {
     "node": ">=16.0.0"
@@ -25,10 +36,15 @@
     "commander": "^11.0.0",
     "chalk": "^4.1.2",
     "bs58": "^5.0.0",
-    "ora": "^5.4.1"
+    "ora": "^5.4.1",
+    "dotenv": "^16.3.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "prettier": "^3.0.0",
     "typescript": "^5.0.0",
     "ts-node": "^10.9.0"
   },

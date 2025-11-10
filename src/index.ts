@@ -4,7 +4,7 @@
  * @description Main entry point for the RocketAnchor deployment toolkit.
  * Provides methods to load configuration, deploy programs, and run seed scripts.
  * 
- * @author Ra<ra@maxxpainn.com>
+ * @author Ra <ra@maxxpainn.com>
  * @created 2025-11-10
  * 
  * License: MIT
