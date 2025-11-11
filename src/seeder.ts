@@ -104,9 +104,9 @@ async function loadSeedConfigs(
 }
 
 async function seedProgram(
-  provider: AnchorProvider,
-  seedConfig: SeedConfig,
-  config: RAConfig
+    provider: AnchorProvider,
+    seedConfig: SeedConfig,
+    config: RAConfig
 ): Promise<void> {
   const artifactsPath = config.paths?.artifacts || './target';
   const idlPath = path.join(artifactsPath, 'idl', `${seedConfig.program}.json`);
@@ -130,7 +130,7 @@ async function seedProgram(
   const programKeypair = await loadKeypair(programKeypairPath);
   const programId = programKeypair.publicKey;
 
-  const program = new Program(idl, programId, provider);
+  const program = new Program(idl, provider);
 
   logger.info(`   Program ID: ${programId.toBase58()}`);
 
@@ -212,32 +212,38 @@ const processAccountPlaceHolders = (
    const resolvedAccounts: { [key: string]: PublicKey } = {};
   
   for (const [key, value] of Object.entries(accounts)) {
-    if (value === 'signer' || value === 'payer') {
-      resolvedAccounts[key] = provider.wallet.publicKey;
-    } else if (value === 'systemProgram') {
-      resolvedAccounts[key] = SystemProgram.programId;
-    } else if (value === 'rent') {
-      resolvedAccounts[key] = SYSVAR_RENT_PUBKEY;
-    } else if (value.startsWith('new:')) {
-      const keypair = Keypair.generate();
-      resolvedAccounts[key] = keypair.publicKey;
-      (resolvedAccounts as any)[`${key}_keypair`] = keypair;
-    } else if (value.startsWith('pda:')) {
-      const [_, ...seeds] = value.split(':');
-      const seedBuffers = seeds.map(s => {
-        if (s === 'signer') {
-          return provider.wallet.publicKey.toBuffer();
-        }
-        return Buffer.from(s);
-      });
-      
-      const [pda] = PublicKey.findProgramAddressSync(
-        seedBuffers,
-        program.programId
-      );
-      resolvedAccounts[key] = pda;
-    } else {
-      resolvedAccounts[key] = new PublicKey(value);
+
+    try {
+      if (value === 'signer' || value === 'payer') {
+        resolvedAccounts[key] = provider.wallet.publicKey;
+      } else if (value === 'systemProgram') {
+        resolvedAccounts[key] = SystemProgram.programId;
+      } else if (value === 'rent') {
+        resolvedAccounts[key] = SYSVAR_RENT_PUBKEY;
+      } else if (value.startsWith('new:')) {
+        const keypair = Keypair.generate();
+        resolvedAccounts[key] = keypair.publicKey;
+        (resolvedAccounts as any)[`${key}_keypair`] = keypair;
+      } else if (value.startsWith('pda:')) {
+        const [_, ...seeds] = value.split(':');
+        const seedBuffers = seeds.map(s => {
+          if (s === 'signer') {
+            return provider.wallet.publicKey.toBuffer();
+          }
+          return Buffer.from(s);
+        });
+        
+        const [pda] = PublicKey.findProgramAddressSync(
+          seedBuffers,
+          program.programId
+        );
+        resolvedAccounts[key] = pda;
+      } else {
+        resolvedAccounts[key] = new PublicKey(value);
+      }
+    } catch(e){
+      console.error(`Error processing placeholder: ${key}: ${value}`)
+      throw e;
     }
   }
 
