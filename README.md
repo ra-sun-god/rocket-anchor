@@ -108,7 +108,7 @@ npx ra deploy --network devnet
 Create `seeds/index.ts`:
 
 ```typescript
-import { SeedConfig } from 'rocket-anchor';
+import type { SeedConfig } from 'rocket-anchor';
 
 export const seeds: SeedConfig[] = [
   {
@@ -291,7 +291,7 @@ Rocket Anchor provides powerful seeding capabilities to automatically initialize
 Create `seeds/index.ts`:
 
 ```typescript
-import { SeedConfig } from 'rocket-anchor';
+import type { SeedConfig } from 'rocket-anchor';
 
 export const seeds: SeedConfig[] = [
   {
@@ -367,7 +367,7 @@ accounts: {
 ### Advanced Seed Example
 
 ```typescript
-import { SeedConfig } from 'rocket-anchor';
+import type { SeedConfig } from 'rocket-anchor';
 
 export const seeds: SeedConfig[] = [
   {
@@ -700,7 +700,7 @@ pub struct Counter {
 
 ```typescript
 // seeds/index.ts
-import { SeedConfig } from 'rocket-anchor';
+import type { SeedConfig } from 'rocket-anchor';
 
 export const seeds: SeedConfig[] = [
   {
@@ -741,7 +741,7 @@ npx ra deploy --network devnet --seed
 
 ```typescript
 // seeds/index.ts
-import { SeedConfig } from 'rocket-anchor';
+import type { SeedConfig } from 'rocket-anchor';
 
 export const seeds: SeedConfig[] = [
   {

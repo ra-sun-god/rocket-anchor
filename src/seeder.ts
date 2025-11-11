@@ -211,6 +211,15 @@ async function executeFunction(
     }
   }
 
+  // lets replace the signer or payer in args too 
+  for (const [key, value] of args){
+    if(["signer", "payer"].includes(value)) {
+       args[key] = provider.wallet.publicKey;
+    } else if(['number', 'bigint'].includes(typeof value)) {
+      args[key] = new anchor.BN(value.toString())
+    }
+  }
+
   const method = (program.methods as any)[functionName](...args);
   method.accounts(resolvedAccounts);
   
