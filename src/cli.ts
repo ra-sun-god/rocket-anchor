@@ -108,7 +108,7 @@ program
     const fs = await import('fs');
     const path = await import('path');
     
-    const configTemplate = `import { RAConfig } from 'rocket-anchor';
+    const configTemplate = `import type { RAConfig } from 'rocket-anchor';
 
 const config: RAConfig = {
   networks: {

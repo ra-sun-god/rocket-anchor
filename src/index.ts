@@ -21,10 +21,12 @@ export {
   SeedConfig,
   PathsConfig
 } from './types';
+
 export { loadConfig } from './config-loader';
 export { deploy } from './deployer';
 export { loadKeypair } from './keypair-loader';
 export { runSeeds } from './seeder';
+
 
 export class RocketAnchor {
   private config: RAConfig | null = null;
