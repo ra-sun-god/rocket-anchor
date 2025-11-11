@@ -7,12 +7,6 @@
   "bin": {
     "ra": "./bin/ra.js"
   },
-  "files": [
-    "dist",
-    "bin",
-    "README.md",
-    "LICENSE"
-  ],
   "scripts": {
     "build": "tsc",
     "dev": "ts-node src/cli.ts",
