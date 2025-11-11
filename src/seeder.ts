@@ -179,7 +179,37 @@ async function executeFunction(
   args: any[],
   provider: AnchorProvider
 ): Promise<void> {
-  const resolvedAccounts: { [key: string]: PublicKey } = {};
+  
+  const resolvedAccounts = processAccountPlaceHolders(program, provider, accounts);
+  const processedArgs = processArgsPlaceholders(program, provider, args);
+
+  const method = (program.methods as any)[functionName](...processedArgs);
+  method.accounts(resolvedAccounts);
+  
+  const signers: Keypair[] = [];
+  for (const [key, value] of Object.entries(resolvedAccounts)) {
+    if (key.endsWith('_keypair')) {
+      signers.push(value as any);
+    }
+  }
+  
+  if (signers.length > 0) {
+    method.signers(signers);
+  }
+
+  const tx = await method.rpc();
+  logger.info(`      Tx: ${tx}`);
+}
+
+
+const processAccountPlaceHolders = (
+  program: Program,
+  provider: AnchorProvider,
+  accounts: { [key: string]: string },
+
+) => {
+
+   const resolvedAccounts: { [key: string]: PublicKey } = {};
   
   for (const [key, value] of Object.entries(accounts)) {
     if (value === 'signer' || value === 'payer') {
@@ -211,29 +241,57 @@ async function executeFunction(
     }
   }
 
-  // lets replace the signer or payer in args too 
-  for (const [key, value] of args){
-    if(["signer", "payer"].includes(value)) {
-       args[key] = provider.wallet.publicKey;
-    } else if(['number', 'bigint'].includes(typeof value)) {
-      args[key] = new anchor.BN(value.toString())
-    }
-  }
+  return resolvedAccounts;
+}
 
-  const method = (program.methods as any)[functionName](...args);
-  method.accounts(resolvedAccounts);
-  
-  const signers: Keypair[] = [];
-  for (const [key, value] of Object.entries(resolvedAccounts)) {
-    if (key.endsWith('_keypair')) {
-      signers.push(value as any);
-    }
-  }
-  
-  if (signers.length > 0) {
-    method.signers(signers);
-  }
+const processArgsPlaceholders = (
+  program: Program,
+  provider: AnchorProvider,
+  args: any[]
+) => {
 
-  const tx = await method.rpc();
-  logger.info(`      Tx: ${tx}`);
+  const processedArgs: any[number] = [];
+
+  for (const [key, value] of Object.entries(args)) {
+    
+    if (value === 'signer' || value === 'payer') {
+      
+      processedArgs[key] = provider.wallet.publicKey;
+    
+    } else if (value === 'systemProgram') {
+      
+      processedArgs[key] = SystemProgram.programId;
+    
+    } else if (value === 'rent') {
+      
+      processedArgs[key] = SYSVAR_RENT_PUBKEY;
+
+    } else if (value.startsWith('pda:')) {
+      
+      const [_, ...seeds] = value.split(':');
+
+      const seedBuffers = seeds.map((s: any)=> {
+        if (s === 'signer') {
+          return provider.wallet.publicKey.toBuffer();
+        }
+        return Buffer.from(s);
+      });
+      
+      const [pda] = PublicKey.findProgramAddressSync(
+        seedBuffers,
+        program.programId
+      );
+      processedArgs[key] = pda;
+    
+    } else if (['number', 'bigint'].includes(value)) {
+        processedArgs[key] = new anchor.BN(value.toString())
+    } 
+    else {
+      processedArgs[key] = value;
+    }
+  
+  } //end loop
+
+  return processedArgs;
+
 }
