@@ -214,6 +214,7 @@ const processAccountPlaceHolders = (
   for (const [key, value] of Object.entries(accounts)) {
 
     try {
+
       if (value === 'signer' || value === 'payer') {
         resolvedAccounts[key] = provider.wallet.publicKey;
       } else if (value === 'systemProgram') {
@@ -242,7 +243,7 @@ const processAccountPlaceHolders = (
         resolvedAccounts[key] = new PublicKey(value);
       }
     } catch(e){
-      console.error(`Error processing placeholder: ${key}: ${value}`)
+      console.error(`processAccountPlaceHolders Error: ${key}: ${value}`)
       throw e;
     }
   }
@@ -259,41 +260,48 @@ const processArgsPlaceholders = (
   const processedArgs: any[number] = [];
 
   for (const [key, value] of Object.entries(args)) {
-    
-    if (value === 'signer' || value === 'payer') {
-      
-      processedArgs[key] = provider.wallet.publicKey;
-    
-    } else if (value === 'systemProgram') {
-      
-      processedArgs[key] = SystemProgram.programId;
-    
-    } else if (value === 'rent') {
-      
-      processedArgs[key] = SYSVAR_RENT_PUBKEY;
 
-    } else if (value.startsWith('pda:')) {
+    try {
       
-      const [_, ...seeds] = value.split(':');
+      if (value === 'signer' || value === 'payer') {
+        
+        processedArgs[key] = provider.wallet.publicKey;
+      
+      } else if (value === 'systemProgram') {
+        
+        processedArgs[key] = SystemProgram.programId;
+      
+      } else if (value === 'rent') {
+        
+        processedArgs[key] = SYSVAR_RENT_PUBKEY;
 
-      const seedBuffers = seeds.map((s: any)=> {
-        if (s === 'signer') {
-          return provider.wallet.publicKey.toBuffer();
-        }
-        return Buffer.from(s);
-      });
+      } else if (value.startsWith('pda:')) {
+        
+        const [_, ...seeds] = value.split(':');
+
+        const seedBuffers = seeds.map((s: any)=> {
+          if (s === 'signer') {
+            return provider.wallet.publicKey.toBuffer();
+          }
+          return Buffer.from(s);
+        });
+        
+        const [pda] = PublicKey.findProgramAddressSync(
+          seedBuffers,
+          program.programId
+        );
+        processedArgs[key] = pda;
       
-      const [pda] = PublicKey.findProgramAddressSync(
-        seedBuffers,
-        program.programId
-      );
-      processedArgs[key] = pda;
-    
-    } else if (['number', 'bigint'].includes(value)) {
+      } else if (['number', 'bigint'].includes(value)) {
         processedArgs[key] = new anchor.BN(value.toString())
-    } 
-    else {
-      processedArgs[key] = value;
+      } 
+      else {
+        processedArgs[key] = value;
+      }
+
+    } catch(e) {
+       console.error(`processArgsPlaceholders Error: ${key}: ${value}`)
+      throw e;
     }
   
   } //end loop
