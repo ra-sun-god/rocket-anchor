@@ -82,7 +82,7 @@ This creates `ra.config.ts` in your project root.
 Edit `ra.config.ts`:
 
 ```typescript
-import { RAConfig } from "rocket-anchor/src/types";
+import type { RAConfig } from "rocket-anchor";
 
 const config: RAConfig = {
   networks: {
@@ -154,7 +154,7 @@ interface NetworkConfig {
 ### Complete Configuration Example
 
 ```typescript
-import { RAConfig } from 'rocket-anchor';
+import type { RAConfig } from "rocket-anchor";
 import * as dotenv from 'dotenv';
 
 dotenv.config();
