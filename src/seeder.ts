@@ -19,6 +19,7 @@ import * as path from 'path';
 import { RAConfig, SeedConfig } from './types';
 import { loadKeypair } from './keypair-loader';
 import { createLogger } from './utils/logger';
+import { isValidPublicKey } from './utils';
 
 const logger = createLogger();
 
@@ -26,6 +27,8 @@ interface SeedOptions {
   program?: string;
   seedScript?: string;
 }
+
+type PlaceholderType = "args" | "accounts"
 
 export async function runSeeds(
   config: RAConfig,
@@ -180,8 +183,8 @@ async function executeFunction(
   provider: AnchorProvider
 ): Promise<void> {
   
-  const resolvedAccounts = processAccountPlaceHolders(program, provider, accounts);
-  const processedArgs = processArgsPlaceholders(program, provider, args);
+  const resolvedAccounts = processPlaceholders(program, provider, accounts, "accounts");
+  const processedArgs = processPlaceholders(program, provider, args, "args");
 
   const method = (program.methods as any)[functionName](...processedArgs);
   method.accounts(resolvedAccounts);
@@ -202,87 +205,51 @@ async function executeFunction(
 }
 
 
-const processAccountPlaceHolders = (
+
+const processPlaceholders = (
   program: Program,
   provider: AnchorProvider,
-  accounts: { [key: string]: string },
-
+  data: any[] | { [key: string]: string },
+  placeholderType: PlaceholderType
 ) => {
 
-   const resolvedAccounts: { [key: string]: PublicKey } = {};
-  
-  for (const [key, value] of Object.entries(accounts)) {
+  const processedData: any[number] | { [key: string]: string } = Array.isArray(data) ? [] : {};
+
+  for (const [key, value] of Object.entries(data)) {
 
     try {
-
-      if (value === 'signer' || value === 'payer') {
-        resolvedAccounts[key] = provider.wallet.publicKey;
-      } else if (value === 'systemProgram') {
-        resolvedAccounts[key] = SystemProgram.programId;
-      } else if (value === 'rent') {
-        resolvedAccounts[key] = SYSVAR_RENT_PUBKEY;
-      } else if (value.startsWith('new:')) {
-        const keypair = Keypair.generate();
-        resolvedAccounts[key] = keypair.publicKey;
-        (resolvedAccounts as any)[`${key}_keypair`] = keypair;
-      } else if (value.startsWith('pda:')) {
-        const [_, ...seeds] = value.split(':');
-        const seedBuffers = seeds.map(s => {
-          if (s === 'signer') {
-            return provider.wallet.publicKey.toBuffer();
-          }
-          return Buffer.from(s);
-        });
-        
-        const [pda] = PublicKey.findProgramAddressSync(
-          seedBuffers,
-          program.programId
-        );
-        resolvedAccounts[key] = pda;
-      } else {
-        resolvedAccounts[key] = new PublicKey(value);
+      
+      
+      if(value instanceof PublicKey) {
+        processedData[key] = value;
       }
-    } catch(e){
-      console.error(`processAccountPlaceHolders Error: ${key}: ${value}`)
-      throw e;
-    }
-  }
 
-  return resolvedAccounts;
-}
+      else if (['number', 'bigint'].includes(value)) {
+        processedData[key] = new anchor.BN(value.toString())
+      } 
 
-const processArgsPlaceholders = (
-  program: Program,
-  provider: AnchorProvider,
-  args: any[]
-) => {
+      else if (isValidPublicKey(value)) {
+         processedData[key] = new PublicKey(value)
+      }
 
-  const processedArgs: any[number] = [];
-
-  for (const [key, value] of Object.entries(args)) {
-
-    try {
-      
-      if (value === 'signer' || value === 'payer') {
+      else if (value === 'signer' || value === 'payer') {
         
-        processedArgs[key] = provider.wallet.publicKey;
+        processedData[key] = provider.wallet.publicKey;
       
       } else if (value === 'systemProgram') {
         
-        processedArgs[key] = SystemProgram.programId;
+        processedData[key] = SystemProgram.programId;
       
       } else if (value === 'rent') {
         
-        processedArgs[key] = SYSVAR_RENT_PUBKEY;
+        processedData[key] = SYSVAR_RENT_PUBKEY;
 
-      } else if (value.startsWith('pda:')) {
+      } else if (typeof value === 'string' && value.startsWith('pda:')) {
         
         const [_, ...seeds] = value.split(':');
 
         const seedBuffers = seeds.map((s: any)=> {
-          if (s === 'signer') {
-            return provider.wallet.publicKey.toBuffer();
-          }
+          if (s === 'signer') { return provider.wallet.publicKey.toBuffer(); }
           return Buffer.from(s);
         });
         
@@ -290,22 +257,26 @@ const processArgsPlaceholders = (
           seedBuffers,
           program.programId
         );
-        processedArgs[key] = pda;
+
+        processedData[key] = pda;
       
-      } else if (['number', 'bigint'].includes(value)) {
-        processedArgs[key] = new anchor.BN(value.toString())
-      } 
+      }
       else {
-        processedArgs[key] = value;
+        
+          if(placeholderType == "args") {
+             processedData[key] = value;
+          } else {
+            processedData[key] =  new PublicKey(value.toString());
+          }
       }
 
     } catch(e) {
-       console.error(`processArgsPlaceholders Error: ${key}: ${value}`)
+       console.error(`processPlaceholders: processing ${placeholderType} error for: ${key}: ${value}`)
       throw e;
     }
   
   } //end loop
 
-  return processedArgs;
+  return processedData;
 
 }
