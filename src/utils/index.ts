@@ -20,3 +20,9 @@ export function isValidPublicKey(str: string) {
     return false;
   }
 }
+
+export const delay = (timeMs: number) => {
+    return new Promise((resolve, reject)=>{
+        setTimeout(()=> { resolve(true) }, timeMs)
+    })
+}

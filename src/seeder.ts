@@ -19,7 +19,7 @@ import * as path from 'path';
 import { RAConfig, SeedConfig } from './types';
 import { loadKeypair } from './keypair-loader';
 import { createLogger } from './utils/logger';
-import { isValidPublicKey } from './utils';
+import { delay, isValidPublicKey } from './utils';
 
 const logger = createLogger();
 
@@ -187,7 +187,7 @@ async function executeFunction(
   const processedArgs = processPlaceholders(program, provider, args, "args");
 
   const method = (program.methods as any)[functionName](...processedArgs);
-  method.accounts(resolvedAccounts);
+  method.accountsStrict(resolvedAccounts);
   
   const signers: Keypair[] = [];
   for (const [key, value] of Object.entries(resolvedAccounts)) {
@@ -200,8 +200,26 @@ async function executeFunction(
     method.signers(signers);
   }
 
-  const tx = await method.rpc();
-  logger.info(`      Tx: ${tx}`);
+  const txSig = await method.rpc({ commitment: "confirmed" });
+  
+  logger.info(`      Tx: ${txSig}`);
+
+  const eventParser = new anchor.EventParser(program.programId,  program.coder);
+
+  await delay(1000);
+          
+  // Now, fetching the transaction should be much more reliable.
+  const tx = await provider.connection.getParsedTransaction(txSig, {
+    commitment: "confirmed",
+    maxSupportedTransactionVersion: 0,
+  });
+
+  let logs = tx?.meta?.logMessages || [];
+
+  for (const event of eventParser.parseLogs(logs)) {
+    console.log(JSON.stringify(event, null, 2))
+    console.log()
+  }
 }
 
 
@@ -243,6 +261,15 @@ const processPlaceholders = (
       } else if (value === 'rent') {
         
         processedData[key] = SYSVAR_RENT_PUBKEY;
+
+      } else if (typeof value === 'string' && value.startsWith('new:')) {
+        
+        const keypair = Keypair.generate();
+        processedData[key] = keypair.publicKey;
+
+        if(placeholderType == "accounts"){
+          (processedData as any)[`${key}_keypair`] = keypair;
+        }
 
       } else if (typeof value === 'string' && value.startsWith('pda:')) {
         
