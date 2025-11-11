@@ -71,12 +71,12 @@ export interface SeedConfig {
   program: string;
   initialize?: {
     function: string;
-    accounts: { [key: string]: string };
+    accounts: { [key: string]: any };
     args: any[];
   };
   seeds?: {
     function: string;
-    accounts: { [key: string]: string };
+    accounts: { [key: string]: any };
     args: any[];
     repeat?: number;
   }[];

@@ -138,7 +138,10 @@ async function seedProgram(
   logger.info(`   Program ID: ${programId.toBase58()}`);
 
   if (seedConfig.initialize) {
+    
     logger.info(`   🔧 Running initialize...`);
+    logger.info(`Calling program method: ${seedConfig.initialize.function}`)
+    
     await executeFunction(
       program,
       seedConfig.initialize.function,
@@ -146,6 +149,7 @@ async function seedProgram(
       seedConfig.initialize.args,
       provider
     );
+    
     logger.success(`   ✅ Initialize completed`);
   }
 
@@ -161,6 +165,8 @@ async function seedProgram(
           logger.info(`      Iteration ${j + 1}/${repeat}`);
         }
         
+      logger.info(`Calling program method: ${seed.function}`)
+
         await executeFunction(
           program,
           seed.function,
