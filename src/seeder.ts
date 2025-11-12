@@ -281,19 +281,29 @@ const processPlaceholders = (
 
       } else if (typeof value === 'string' && value.startsWith('pda:')) {
         
-        const [_, ...seeds] = value.split(':');
+        const processPda = (value2: string) => { 
+          
+          const [_, ...seeds] = value2.split(':');
 
-        const seedBuffers = seeds.map((s: any)=> {
-          if (s === 'signer') { return provider.wallet.publicKey.toBuffer(); }
-          return Buffer.from(s);
-        });
-        
-        const [pda] = PublicKey.findProgramAddressSync(
-          seedBuffers,
-          program.programId
-        );
+          const seedBuffers: any[] = seeds.map((s: any)=> {
+            if (s === 'signer') { 
+              return provider.wallet.publicKey.toBuffer(); 
+            } else if(typeof s == 'string' && s.startsWith("pda:")) {
+              return processPda(s)
+            } else {
+              return Buffer.from(s);
+            }
+          });
+          
+          const [pda] = PublicKey.findProgramAddressSync(
+            seedBuffers,
+            program.programId
+          );
 
-        processedData[key] = pda;
+          return pda;
+        }
+
+        processedData[key] = processPda(value);
       
       }
       else {
