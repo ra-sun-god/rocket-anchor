@@ -281,15 +281,17 @@ const processPlaceholders = (
 
       } else if (typeof value === 'string' && value.startsWith('pda:')) {
         
-        const processPda = (value2: string) => { 
+        const processPda = (str: string) => { 
           
-          const [_, ...seeds] = value2.split(':');
+          let newStr = str.replace(/^pda:/, "");
+
+          const seeds = newStr.split(',');
 
           const seedBuffers: any[] = seeds.map((s: any)=> {
             if (s === 'signer') { 
               return provider.wallet.publicKey.toBuffer(); 
             } else if(typeof s == 'string' && s.startsWith("pda:")) {
-              return processPda(s)
+              return processPda(s).toBuffer()
             } else {
               return Buffer.from(s);
             }
