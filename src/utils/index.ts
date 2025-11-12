@@ -21,6 +21,16 @@ export function isValidPublicKey(str: string) {
   }
 }
 
+export const isBN = (value: any) => {
+    return (
+        typeof value === 'object' &&
+        typeof value.toNumber === 'function' &&
+        typeof value.toArrayLike === "function" &&
+        typeof value.toTwos === "function" &&
+        typeof value.add === "function"
+    )
+}
+
 export const delay = (timeMs: number) => {
     return new Promise((resolve, reject)=>{
         setTimeout(()=> { resolve(true) }, timeMs)

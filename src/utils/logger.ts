@@ -35,7 +35,8 @@ export function createLogger(): Logger {
     },
     
     info: (message: string, ...args: any[]) => {
-      console.log(chalk.blue(message), ...args);
+      //sky blue
+      console.log(chalk.hex('#4da6ff')(message), ...args);
     },
     
     success: (message: string, ...args: any[]) => {

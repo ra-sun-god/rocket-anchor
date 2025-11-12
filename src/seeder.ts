@@ -13,6 +13,7 @@
 
 import { Connection, Keypair, PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from '@solana/web3.js';
 import * as anchor from '@coral-xyz/anchor';
+import { BN } from '@coral-xyz/anchor';
 import { Program, AnchorProvider, Wallet } from '@coral-xyz/anchor';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -149,7 +150,7 @@ async function seedProgram(
       seedConfig.initialize.args,
       provider
     );
-    
+
     logger.success(`   ✅ Initialize completed`);
   }
 
@@ -196,6 +197,7 @@ async function executeFunction(
   method.accountsStrict(resolvedAccounts);
   
   const signers: Keypair[] = [];
+
   for (const [key, value] of Object.entries(resolvedAccounts)) {
     if (key.endsWith('_keypair')) {
       signers.push(value as any);
@@ -223,7 +225,7 @@ async function executeFunction(
   let logs = tx?.meta?.logMessages || [];
 
   for (const event of eventParser.parseLogs(logs)) {
-    console.log(JSON.stringify(event, null, 2))
+    logger.info(JSON.stringify(event, null, 2))
     console.log()
   }
 }
@@ -243,12 +245,12 @@ const processPlaceholders = (
 
     try {
       
-      
-      if(value instanceof PublicKey) {
+  
+      if(typeof value == 'object' || !['number', 'bigint', 'string'].includes(typeof value)) {
         processedData[key] = value;
       }
 
-      else if (['number', 'bigint'].includes(value)) {
+      else if (['number', 'bigint'].includes(typeof value)) {
         processedData[key] = new anchor.BN(value.toString())
       } 
 
@@ -295,7 +297,7 @@ const processPlaceholders = (
       
       }
       else {
-        
+
           if(placeholderType == "args") {
              processedData[key] = value;
           } else {
