@@ -166,7 +166,7 @@ async function seedProgram(
           logger.info(`      Iteration ${j + 1}/${repeat}`);
         }
         
-      logger.info(`Calling program method: ${seed.function}`)
+      logger.info(`      Calling program method: ${seed.function}`)
 
         await executeFunction(
           program,
@@ -177,7 +177,7 @@ async function seedProgram(
         );
       }
       
-      logger.success(`   ✅ Seed ${i + 1} completed`);
+      logger.success(`   ✅ Seed ${i + 1} (${seed.function}) completed`);
     }
   }
 }
