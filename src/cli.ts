@@ -112,18 +112,18 @@ program
 
 const config: RAConfig = {
   networks: {
-    localnet: {
+    solana_localnet: {
       url: 'http://127.0.0.1:8899',
       accounts: ['~/.config/solana/id.json'],
       commitment: 'confirmed',
     },
-    devnet: {
+    solana_devnet: {
       url: 'https://api.devnet.solana.com',
       accounts: ['~/.config/solana/devnet.json'],
       commitment: 'confirmed',
       timeout: 60000,
     },
-    mainnet: {
+    solana_mainnet: {
       url: 'https://api.mainnet-beta.solana.com',
       accounts: ['~/.config/solana/mainnet.json'],
       commitment: 'finalized',

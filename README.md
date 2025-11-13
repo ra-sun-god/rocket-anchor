@@ -86,10 +86,11 @@ import type { RAConfig } from "rocket-anchor";
 
 const config: RAConfig = {
   networks: {
-    devnet: {
+    solana_devnet: {
       url: 'https://api.devnet.solana.com',
       accounts: ['~/.config/solana/devnet.json'],
       commitment: 'confirmed',
+      type: 'devnet' // localnet | devnet | testnet | mainnet
     },
   },
 };
@@ -148,6 +149,7 @@ interface NetworkConfig {
   commitment?: Commitment;  // 'processed' | 'confirmed' | 'finalized'
   skipPreflight?: boolean;  // Skip preflight checks
   websocket?: string;       // WebSocket endpoint (optional)
+  type: NetworkType         // Newtork type, one of these: localnet | devnet | testnet | mainnet
 }
 ```
 
@@ -161,29 +163,33 @@ dotenv.config();
 
 const config: RAConfig = {
   networks: {
-    localnet: {
+    solana_localnet: {
       url: 'http://127.0.0.1:8899',
       accounts: ['~/.config/solana/id.json'],
       commitment: 'confirmed',
+      type: 'localnet' 
     },
-    devnet: {
+    solana_devnet: {
       url: process.env.DEVNET_RPC_URL || 'https://api.devnet.solana.com',
       accounts: [process.env.DEVNET_KEYPAIR_PATH!],
       commitment: 'confirmed',
       timeout: 60000,
+      type: 'devnet' 
     },
-    testnet: {
+    solana_testnet: {
       url: 'https://api.testnet.solana.com',
       accounts: ['./keypairs/testnet.json'],
       commitment: 'confirmed',
+      type: 'testnet' 
     },
-    mainnet: {
+    solana_mainnet: {
       url: process.env.MAINNET_RPC_URL || 'https://api.mainnet-beta.solana.com',
       accounts: [process.env.MAINNET_KEYPAIR_PATH!],
       commitment: 'finalized',
       skipPreflight: false,
       timeout: 90000,
       websocket: 'wss://api.mainnet-beta.solana.com',
+      type: 'mainnet' 
     },
   },
   paths: {
@@ -212,25 +218,25 @@ Deploy Anchor programs to a specified network.
 
 ```bash
 # Basic deployment
-npx ra deploy --network devnet
+npx ra deploy --network solana_devnet
 
 # Deploy specific program
-npx ra deploy --network devnet --program token_vault
+npx ra deploy --network solana_devnet --program token_vault
 
 # Skip build step
-npx ra deploy --network devnet --skip-build
+npx ra deploy --network solana_devnet --skip-build
 
 # Deploy and verify
-npx ra deploy --network mainnet --verify
+npx ra deploy --network solana_mainnet --verify
 
 # Deploy as non-upgradeable
-npx ra deploy --network mainnet --upgradeable false
+npx ra deploy --network solana_mainnet --upgradeable false
 
 # Deploy and run seeds
-npx ra deploy --network devnet --seed
+npx ra deploy --network solana_devnet --seed
 
 # Deploy with custom seed script
-npx ra deploy --network devnet --seed --seed-script ./scripts/custom.ts
+npx ra deploy --network solana_devnet --seed --seed-script ./scripts/custom.ts
 ```
 
 ### Seed
@@ -239,13 +245,13 @@ Run initialization and seed scripts for deployed programs.
 
 ```bash
 # Run seeds
-npx ra seed --network devnet
+npx ra seed --network solana_devnet
 
 # Seed specific program
-npx ra seed --network devnet --program my_program
+npx ra seed --network solana_devnet --program my_program
 
 # Use custom seed script
-npx ra seed --network devnet --script ./scripts/advanced-seed.ts
+npx ra seed --network solana_devnet --script ./scripts/advanced-seed.ts
 ```
 
 ### Build
@@ -269,7 +275,7 @@ Run Anchor tests.
 npx ra test
 
 # Run tests on specific network
-npx ra test --network devnet
+npx ra test --network solana_devnet
 ```
 
 ### Init
@@ -461,7 +467,7 @@ export default customSeed;
 Use custom script:
 
 ```bash
-npx ra seed --network devnet --script ./scripts/custom-seed.ts
+npx ra seed --network solana_devnet --script ./scripts/custom-seed.ts
 ```
 
 ---
@@ -569,7 +575,7 @@ class DeploymentManager {
 
 // Usage
 const manager = new DeploymentManager();
-await manager.deployToMultipleNetworks(['devnet', 'testnet']);
+await manager.deployToMultipleNetworks(['solana_devnet', 'solana_testnet']);
 ```
 
 ---
@@ -614,7 +620,7 @@ Manage different keypairs for different purposes:
 ```typescript
 const config: RAConfig = {
   networks: {
-    mainnet: {
+    solana_mainnet: {
       url: 'https://api.mainnet-beta.solana.com',
       accounts: [
         './keypairs/mainnet-deployer.json',  // Primary deployer
@@ -636,7 +642,7 @@ execSync('anchor build -- --features mainnet', { stdio: 'inherit' });
 
 // Then deploy
 await ra.deploy({
-  network: 'mainnet',
+  network: 'solana_mainnet',
   skipBuild: true, // Already built
 });
 ```
@@ -733,7 +739,7 @@ export default seeds;
 
 ```bash
 # Deploy and seed
-npx ra deploy --network devnet --seed
+npx ra deploy --network solana_devnet --seed
 # Counter will be at 10 (0 + 10 increments)
 ```
 
@@ -786,9 +792,10 @@ keypairs/
 ```typescript
 const config: RAConfig = {
   networks: {
-    mainnet: {
+    solana_mainnet: {
       url: process.env.MAINNET_RPC_URL!,
       accounts: [process.env.MAINNET_KEYPAIR_PATH!],
+      type: "mainnet"
     },
   },
 };
@@ -804,10 +811,10 @@ Consider integrating Ledger support for mainnet deployments.
 
 ```bash
 # Test on devnet
-npx ra deploy --network devnet --seed
+npx ra deploy --network solana_devnet --seed
 # Thoroughly test all functionality
 # Then deploy to mainnet
-npx ra deploy --network mainnet --verify
+npx ra deploy --network solana_mainnet --verify
 ```
 
 **Use separate keypairs per network:**
@@ -822,23 +829,23 @@ keypairs/
 
 ### 3. Deployment
 
-**Verify mainnet deployments:**
+**Verify solana_mainnet deployments:**
 
 ```bash
-npx ra deploy --network mainnet --verify
+npx ra deploy --network solana_mainnet --verify
 ```
 
 **Use verifiable builds for mainnet:**
 
 ```bash
 npx ra build --verifiable
-npx ra deploy --network mainnet --skip-build
+npx ra deploy --network solana_mainnet --skip-build
 ```
 
 **Keep deployment logs:**
 
 ```bash
-npx ra deploy --network mainnet 2>&1 | tee deployment-$(date +%Y%m%d-%H%M%S).log
+npx ra deploy --network solana_mainnet 2>&1 | tee deployment-$(date +%Y%m%d-%H%M%S).log
 ```
 
 ### 4. Configuration Management
@@ -853,7 +860,7 @@ ra.config.prod.ts
 
 ```bash
 export RA_CONFIG=ra.config.prod.ts
-npx ra deploy --network mainnet
+npx ra deploy --network solana_mainnet
 ```
 
 ---
@@ -919,7 +926,7 @@ ls target/idl/
 Enable verbose logging:
 
 ```bash
-DEBUG=ra:* npx ra deploy --network devnet
+DEBUG=ra:* npx ra deploy --network solana_mainnet
 ```
 
 ### Getting Help
@@ -995,7 +1002,7 @@ deploy:
     - export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
   script:
     - echo "$DEPLOYER_KEYPAIR" > deployer.json
-    - npx ra deploy --network devnet --seed
+    - npx ra deploy --network solana_devnet --seed
   after_script:
     - rm -f deployer.json
   only:

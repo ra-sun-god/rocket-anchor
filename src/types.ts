@@ -12,6 +12,8 @@
 
 import { Commitment } from '@solana/web3.js';
 
+export type NetworkType = "localnet" | "devnet" | "testnet" | "mainnet"
+
 export interface NetworkConfig {
   url: string;
   accounts?: string[];
@@ -19,6 +21,7 @@ export interface NetworkConfig {
   commitment?: Commitment;
   skipPreflight?: boolean;
   websocket?: string;
+  type:   NetworkType
 }
 
 export interface PathsConfig {
