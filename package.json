@@ -33,12 +33,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/ra-sun-gold/rocket-anchor.git"
+    "url": "https://github.com/ra-sun-god/rocket-anchor.git"
   },
   "bugs": {
-    "url": "https://github.com/ra-sun-gold/rocket-anchor/issues"
+    "url": "https://github.com/ra-sun-god/rocket-anchor/issues"
   },
-  "homepage": "https://github.com/ra-sun-gold/rocket-anchor#readme",
+  "homepage": "https://github.com/ra-sun-god/rocket-anchor#readme",
   "author": "Ra <ra@maxxpainn.com>",
   "license": "MIT",
   "engines": {
