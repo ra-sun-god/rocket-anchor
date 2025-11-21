@@ -45,6 +45,7 @@ export async function runSeeds(
   const signer = await loadKeypair(networkConfig.accounts?.[0]);
   
   const wallet = new Wallet(signer);
+
   const provider = new AnchorProvider(connection, wallet, {
     commitment: networkConfig.commitment || 'confirmed',
   });

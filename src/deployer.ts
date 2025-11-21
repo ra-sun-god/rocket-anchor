@@ -17,6 +17,7 @@ import { loadKeypair } from './keypair-loader';
 import { findPrograms } from './utils/program-finder';
 import { createLogger } from './utils/logger';
 import { runSeeds } from './seeder';
+import path from 'path';
 
 const logger = createLogger();
 
@@ -62,8 +63,6 @@ export async function deploy(
     
     try {
       const result = await deployProgram(
-        connection,
-        deployer,
         program,
         networkConfig,
         options
@@ -101,7 +100,7 @@ export async function deploy(
 
   if (options.seed) {
     logger.info('\n🌱 Running seed scripts...');
-    await runSeeds(config, networkName, {
+    await runSeeds(config, networkName,{
       program: options.program,
       seedScript: options.seedScript,
     });
@@ -111,18 +110,23 @@ export async function deploy(
 }
 
 async function deployProgram(
-  connection: Connection,
-  deployer: Keypair,
   program: ProgramInfo,
   networkConfig: any,
   options: DeployOptions
 ): Promise<DeployResult> {
+
   const programKeypair = await loadKeypair(program.keypairPath);
   const programId = programKeypair.publicKey.toBase58();
 
+  const deployerKeypairPath = path.resolve(networkConfig.accounts?.[0]);
+
   try {
     const upgradeableFlag = options.upgradeable !== false ? '' : '--final';
-    const cmd = `solana program deploy ${program.soPath} --program-id ${program.keypairPath} --url ${networkConfig.url} ${upgradeableFlag}`;
+    const cmd = `solana program deploy ${program.soPath} \
+      --program-id ${program.keypairPath} \
+      --keypair ${deployerKeypairPath}
+      --url ${networkConfig.url} ${upgradeableFlag}
+    `;
     
     const output = execSync(cmd, { encoding: 'utf-8' });
     
