@@ -124,7 +124,7 @@ async function deployProgram(
     const upgradeableFlag = options.upgradeable !== false ? '' : '--final';
     const cmd = `solana program deploy ${program.soPath} \
       --program-id ${program.keypairPath} \
-      --keypair ${deployerKeypairPath}
+      --keypair ${deployerKeypairPath} \
       --url ${networkConfig.url} ${upgradeableFlag}
     `;
     
