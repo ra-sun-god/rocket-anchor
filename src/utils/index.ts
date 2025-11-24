@@ -36,3 +36,36 @@ export const delay = (timeMs: number) => {
         setTimeout(()=> { resolve(true) }, timeMs)
     })
 }
+
+export const retryExecute = async <T>(
+  func: () => Promise<T>,
+  retries: number
+): Promise<T | null> => {
+
+  for (let i = 0; i < retries; i++) {
+    try {
+      // Force timeout (Solana RPC often hangs)
+      const result: any = await Promise.race([
+        func(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("RPC timeout")), 8000)
+        ),
+      ]);
+
+      // Solana returns null when account doesn't exist — treat as error
+      if (result === null || result === undefined) {
+        throw new Error("RPC returned null");
+      }
+
+      return result as T;
+
+    } catch (e) {
+      const waitTime = Math.max(1, i * 2);
+      console.log(`Retry ${i + 1} failed → ${(e as Error).message}`);
+      console.log(`Waiting ${waitTime}s before retry...\n`);
+      await new Promise((r) => setTimeout(r, waitTime * 1000));
+    }
+  }
+
+  return null;
+};

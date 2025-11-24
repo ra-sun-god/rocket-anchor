@@ -10,14 +10,16 @@
  * License: MIT
  */
 
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
-import { execSync } from 'child_process';
+import { AccountInfo, Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { exec, execSync } from 'child_process';
+const { spawn } = require("child_process");
 import { RAConfig, DeployOptions, ProgramInfo, DeployResult } from './types';
 import { loadKeypair } from './keypair-loader';
 import { findPrograms } from './utils/program-finder';
 import { createLogger } from './utils/logger';
 import { runSeeds } from './seeder';
 import path from 'path';
+import { retryExecute } from './utils';
 
 const logger = createLogger();
 
@@ -89,22 +91,30 @@ export async function deploy(
     }
   }
 
-  if (options.verify) {
-    logger.verifying();
-    for (const result of results) {
-      if (result.success) {
-        await verifyProgram(connection, result);
+   logger.success('Waiting for 5 seconds, have patience...\n');
+
+  setTimeout(async ()=> {
+
+    if (options.verify) {
+      logger.verifying();
+      for (const result of results) {
+        if (result.success) {
+          await verifyProgram(connection, result);
+        }
       }
     }
-  }
 
-  if (options.seed) {
-    logger.info('\n🌱 Running seed scripts...');
-    await runSeeds(config, networkName,{
-      program: options.program,
-      seedScript: options.seedScript,
-    });
-  }
+    if (options.seed) {
+      logger.info('\n🌱 Running seed scripts...');
+
+        await runSeeds(config, networkName,{
+          program: options.program,
+          seedScript: options.seedScript,
+        });
+    
+    }
+
+  }, 5_000);
 
   return results;
 }
@@ -122,14 +132,28 @@ async function deployProgram(
 
   try {
     const upgradeableFlag = options.upgradeable !== false ? '' : '--final';
-    const cmd = `solana program deploy ${program.soPath} \
+    const cmdStr = `solana program deploy ${program.soPath} \
       --program-id ${program.keypairPath} \
       --keypair ${deployerKeypairPath} \
       --url ${networkConfig.url} ${upgradeableFlag}
     `;
     
-    const output = execSync(cmd, { encoding: 'utf-8' });
+
+    const cmd = exec(cmdStr, { encoding: 'utf-8' });
     
+    let output = "" //execSync(cmd, { encoding: 'utf-8' });
+    
+
+    cmd.stdout?.on("data", (data: any) => {
+     console.log(data);
+      output += data;
+    });
+    
+
+    cmd.stderr?.on("data", (data: any) => {
+      console.error(data);
+    });
+
     const txMatch = output.match(/Signature: ([A-Za-z0-9]+)/);
     const txSignature = txMatch ? txMatch[1] : undefined;
 
@@ -153,8 +177,16 @@ async function verifyProgram(
   connection: Connection,
   result: DeployResult
 ): Promise<void> {
+
+  let retries = 5;
+
   const programId = new PublicKey(result.programId);
-  const accountInfo = await connection.getAccountInfo(programId);
+  
+  
+  
+  const accountInfo = await retryExecute <AccountInfo<Buffer> | null>(async ()=> {
+    return connection.getAccountInfo(programId);
+  }, 10) 
 
   if (!accountInfo) {
     throw new Error(`Program ${result.programName} not found on chain`);
