@@ -17,7 +17,7 @@ import { BN } from '@coral-xyz/anchor';
 import { Program, AnchorProvider, Wallet } from '@coral-xyz/anchor';
 import * as fs from 'fs';
 import * as path from 'path';
-import { RAConfig, SeedConfig } from './types';
+import { SeedConfigFunction, CustomSeedFunction, RAConfig, SeedConfig, SeedConfigFunctionResult } from './types';
 import { loadKeypair } from './keypair-loader';
 import { createLogger } from './utils/logger';
 import { delay, isValidPublicKey } from './utils';
@@ -64,17 +64,20 @@ export async function runSeeds(
   const seedConfigs = await loadSeedConfigs(config, options);
 
   for (const seedConfig of seedConfigs) {
-    if (options.program && seedConfig.program !== options.program) {
+
+    if (options.program && typeof seedConfig !== 'function' && seedConfig.program !== options.program) {
       continue;
     }
 
-    logger.info(`\n📝 Seeding ${seedConfig.program}...`);
+    //const program = (seedConfig === 'function') ? config.programName : seedConfig.program;
+
+    logger.info(`\n📝 Seeding ${config.programName}...`);
 
     try {
       await seedProgram(provider, seedConfig, config);
-      logger.success(`✅ ${seedConfig.program} seeded successfully`);
+      logger.success(`✅ ${config.programName} seeded successfully`);
     } catch (error: any) {
-      logger.error(`❌ Failed to seed ${seedConfig.program}:`, error);
+      logger.error(`❌ Failed to seed ${config.programName}:`, error);
       throw error;
     }
   }
@@ -83,7 +86,7 @@ export async function runSeeds(
 async function loadSeedConfigs(
   config: RAConfig,
   options: SeedOptions
-): Promise<SeedConfig[]> {
+): Promise<SeedConfig[] | CustomSeedFunction[]> {
   if (options.seedScript) {
     const scriptPath = path.resolve(process.cwd(), options.seedScript);
     if (!fs.existsSync(scriptPath)) {
@@ -117,15 +120,15 @@ async function loadSeedConfigs(
 
 async function seedProgram(
     provider: AnchorProvider,
-    seedConfig: SeedConfig,
+    seedConfig: SeedConfig | CustomSeedFunction,
     config: RAConfig
 ): Promise<void> {
 
   const artifactsPath = config.paths?.artifacts || './target';
-  const idlPath = path.join(process.cwd(), artifactsPath, 'idl', `${seedConfig.program}.json`);
+  const idlPath = path.join(process.cwd(), artifactsPath, 'idl', `${config.programName}.json`);
 
   if (!fs.existsSync(idlPath)) {
-    throw new Error(`IDL not found for ${seedConfig.program}: ${idlPath}`);
+    throw new Error(`IDL not found for ${config.programName}: ${idlPath}`);
   }
 
   const idl = JSON.parse(fs.readFileSync(idlPath, 'utf-8'));
@@ -133,7 +136,7 @@ async function seedProgram(
   const programKeypairPath = path.join(
     artifactsPath,
     'deploy',
-    `${seedConfig.program}-keypair.json`
+    `${config.programName}-keypair.json`
   );
 
   if (!fs.existsSync(programKeypairPath)) {
@@ -147,16 +150,35 @@ async function seedProgram(
 
   logger.info(`   Program ID: ${programId.toBase58()}`);
 
+  //console.log("seedConfig=======>", typeof seedConfig)
+
+  if(typeof seedConfig === 'function') {
+    logger.info(` 🌱 Running custom seed function...`);
+    // @ts-ignore
+    seedConfig = await seedConfig({ provider, program, programId })
+    logger.success(`   ✅ Custom seed completed`);
+    return;
+  }
+
   if (seedConfig.initialize) {
 
-    logger.info(`   🔧 Running initialize...`);
-    logger.info(`Calling program method: ${seedConfig.initialize.function}`)
+    let initConfig = seedConfig.initialize;
 
+    if(typeof initConfig === 'function') {
+      // @ts-ignore
+      initConfig = await initConfig({ provider, program, programId }) as SeedConfigFunctionResult;
+    }
+
+    logger.info(`   🔧 Running initialize...`);
+    logger.info(`Calling program method: ${initConfig.function}`)
+
+
+     // @ts-ignore
     await executeFunction(
       program,
-      seedConfig.initialize.function,
-      seedConfig.initialize.accounts,
-      seedConfig.initialize.args,
+      initConfig.function,
+      initConfig.accounts,
+      initConfig.args,
       provider
     );
 
@@ -165,7 +187,14 @@ async function seedProgram(
 
   if (seedConfig.seeds) {
     for (let i = 0; i < seedConfig.seeds.length; i++) {
-      const seed = seedConfig.seeds[i];
+
+      let seed = seedConfig.seeds[i];
+
+      if(typeof seed === 'function') {
+        // @ts-ignore
+        seed = await seed({ provider, program, programId }) as SeedConfigFunctionResult;
+      }
+
       const repeat = seed.repeat || 1;
 
       logger.info(`   🌱 Running seed ${i + 1}/${seedConfig.seeds.length}...`);
@@ -199,43 +228,53 @@ async function executeFunction(
   provider: AnchorProvider
 ): Promise<void> {
 
-  const resolvedAccounts = processPlaceholders(program, provider, accounts, "accounts");
-  const processedArgs = processPlaceholders(program, provider, args, "args");
+  try {
+    const resolvedAccounts = processPlaceholders(program, provider, accounts, "accounts");
+    const processedArgs = processPlaceholders(program, provider, args, "args");
 
-  const method = (program.methods as any)[functionName](...processedArgs);
-  method.accountsStrict(resolvedAccounts);
+    const method = (program.methods as any)[functionName](...processedArgs);
+    method.accountsStrict(resolvedAccounts);
 
-  const signers: Keypair[] = [];
+    const signers: Keypair[] = [];
 
-  for (const [key, value] of Object.entries(resolvedAccounts)) {
-    if (key.endsWith('_keypair')) {
-      signers.push(value as any);
+    for (const [key, value] of Object.entries(resolvedAccounts)) {
+      if (key.endsWith('_keypair')) {
+        signers.push(value as any);
+      }
     }
-  }
 
-  if (signers.length > 0) {
-    method.signers(signers);
-  }
+    if (signers.length > 0) {
+      method.signers(signers);
+    }
 
-  const txSig = await method.rpc({ commitment: "confirmed" });
+    const txSig = await method.rpc({ commitment: "confirmed" });
 
-  logger.info(`      Tx: ${txSig}`);
+    logger.info(`      Tx: ${txSig}`);
 
-  const eventParser = new anchor.EventParser(program.programId,  program.coder);
+    const eventParser = new anchor.EventParser(program.programId, program.coder);
 
-  await delay(1000);
+    await delay(1000);
 
-  // Now, fetching the transaction should be much more reliable.
-  const tx = await provider.connection.getParsedTransaction(txSig, {
-    commitment: "confirmed",
-    maxSupportedTransactionVersion: 0,
-  });
+    // Now, fetching the transaction should be much more reliable.
+    const tx = await provider.connection.getParsedTransaction(txSig, {
+      commitment: "confirmed",
+      maxSupportedTransactionVersion: 0,
+    });
 
-  let logs = tx?.meta?.logMessages || [];
+    let logs = tx?.meta?.logMessages || [];
 
-  for (const event of eventParser.parseLogs(logs)) {
-    logger.info(JSON.stringify(event, null, 2))
-    console.log()
+    for (const event of eventParser.parseLogs(logs)) {
+      logger.info(JSON.stringify(event, null, 2))
+      console.log()
+    }
+  } catch(e: any){
+    console.log(JSON.stringify(e))
+    if(JSON.stringify(e).includes("already in use")){
+      console.error(e, e.stack)
+      return;
+    }
+
+    throw e;
   }
 }
 

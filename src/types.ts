@@ -10,9 +10,11 @@
  * License: MIT
  */
 
+import { AnchorProvider, Program } from '@coral-xyz/anchor';
 import { Commitment } from '@solana/web3.js';
 
 export type NetworkType = "localnet" | "devnet" | "testnet" | "mainnet"
+
 
 export interface NetworkConfig {
   url: string;
@@ -71,17 +73,27 @@ export interface DeployResult {
   error?: string;
 }
 
+
+export type SeedConfigFunctionResult = {
+  function: string;
+  accounts: { [key: string]: any };
+  args: any[];
+  repeat?: number;
+}
+
+export type SeedConfigFunctionProps = {
+  provider: AnchorProvider,
+  program: Program,
+  programId: string
+}
+
+export type SeedConfigFunction = (props: SeedConfigFunctionProps) => Promise<SeedConfigFunctionResult>
+
+export type CustomSeedFunction = (props: SeedConfigFunctionProps) => Promise<void>
+
+
 export interface SeedConfig {
   program: string;
-  initialize?: {
-    function: string;
-    accounts: { [key: string]: any };
-    args: any[];
-  };
-  seeds?: {
-    function: string;
-    accounts: { [key: string]: any };
-    args: any[];
-    repeat?: number;
-  }[];
+  initialize?: SeedConfigFunctionResult | SeedConfigFunction;
+  seeds?: (SeedConfigFunctionResult | SeedConfigFunction)[];
 }
