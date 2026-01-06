@@ -4,10 +4,10 @@
  * @description Seeding and initialization logic for RocketAnchor. Handles
  * automatic program initialization and seed data population using declarative
  * configuration or custom scripts.
- * 
+ *
  * @author Ra <ra@maxxpainn.com>
  * @created 2025-11-10
- * 
+ *
  * License: MIT
  */
 
@@ -36,14 +36,21 @@ export async function runSeeds(
   networkName: string,
   options: SeedOptions
 ): Promise<void> {
+
+  if(!options.program){
+    options["program"] = config.programName;
+  }
+
+  ///console.log("options====>", options)
+
   const networkConfig = config.networks[networkName];
-  
+
   const connection = new Connection(networkConfig.url, {
     commitment: networkConfig.commitment || 'confirmed',
   });
 
   const signer = await loadKeypair(networkConfig.accounts?.[0]);
-  
+
   const wallet = new Wallet(signer);
 
   const provider = new AnchorProvider(connection, wallet, {
@@ -62,7 +69,7 @@ export async function runSeeds(
     }
 
     logger.info(`\n📝 Seeding ${seedConfig.program}...`);
-    
+
     try {
       await seedProgram(provider, seedConfig, config);
       logger.success(`✅ ${seedConfig.program} seeded successfully`);
@@ -82,7 +89,7 @@ async function loadSeedConfigs(
     if (!fs.existsSync(scriptPath)) {
       throw new Error(`Seed script not found: ${scriptPath}`);
     }
-    
+
     const seedModule = await import(scriptPath);
     const seeds = seedModule.default || seedModule.seeds;
     return Array.isArray(seeds) ? seeds : [seeds];
@@ -113,21 +120,22 @@ async function seedProgram(
     seedConfig: SeedConfig,
     config: RAConfig
 ): Promise<void> {
+
   const artifactsPath = config.paths?.artifacts || './target';
-  const idlPath = path.join(artifactsPath, 'idl', `${seedConfig.program}.json`);
-  
+  const idlPath = path.join(process.cwd(), artifactsPath, 'idl', `${seedConfig.program}.json`);
+
   if (!fs.existsSync(idlPath)) {
     throw new Error(`IDL not found for ${seedConfig.program}: ${idlPath}`);
   }
 
   const idl = JSON.parse(fs.readFileSync(idlPath, 'utf-8'));
-  
+
   const programKeypairPath = path.join(
     artifactsPath,
     'deploy',
     `${seedConfig.program}-keypair.json`
   );
-  
+
   if (!fs.existsSync(programKeypairPath)) {
     throw new Error(`Program keypair not found: ${programKeypairPath}`);
   }
@@ -140,10 +148,10 @@ async function seedProgram(
   logger.info(`   Program ID: ${programId.toBase58()}`);
 
   if (seedConfig.initialize) {
-    
+
     logger.info(`   🔧 Running initialize...`);
     logger.info(`Calling program method: ${seedConfig.initialize.function}`)
-    
+
     await executeFunction(
       program,
       seedConfig.initialize.function,
@@ -159,14 +167,14 @@ async function seedProgram(
     for (let i = 0; i < seedConfig.seeds.length; i++) {
       const seed = seedConfig.seeds[i];
       const repeat = seed.repeat || 1;
-      
+
       logger.info(`   🌱 Running seed ${i + 1}/${seedConfig.seeds.length}...`);
-      
+
       for (let j = 0; j < repeat; j++) {
         if (repeat > 1) {
           logger.info(`      Iteration ${j + 1}/${repeat}`);
         }
-        
+
       logger.info(`      Calling program method: ${seed.function}`)
 
         await executeFunction(
@@ -177,7 +185,7 @@ async function seedProgram(
           provider
         );
       }
-      
+
       logger.success(`   ✅ Seed ${i + 1} (${seed.function}) completed`);
     }
   }
@@ -190,13 +198,13 @@ async function executeFunction(
   args: any[],
   provider: AnchorProvider
 ): Promise<void> {
-  
+
   const resolvedAccounts = processPlaceholders(program, provider, accounts, "accounts");
   const processedArgs = processPlaceholders(program, provider, args, "args");
 
   const method = (program.methods as any)[functionName](...processedArgs);
   method.accountsStrict(resolvedAccounts);
-  
+
   const signers: Keypair[] = [];
 
   for (const [key, value] of Object.entries(resolvedAccounts)) {
@@ -204,19 +212,19 @@ async function executeFunction(
       signers.push(value as any);
     }
   }
-  
+
   if (signers.length > 0) {
     method.signers(signers);
   }
 
   const txSig = await method.rpc({ commitment: "confirmed" });
-  
+
   logger.info(`      Tx: ${txSig}`);
 
   const eventParser = new anchor.EventParser(program.programId,  program.coder);
 
   await delay(1000);
-          
+
   // Now, fetching the transaction should be much more reliable.
   const tx = await provider.connection.getParsedTransaction(txSig, {
     commitment: "confirmed",
@@ -245,34 +253,34 @@ const processPlaceholders = (
   for (const [key, value] of Object.entries(data)) {
 
     try {
-      
-  
+
+
       if(typeof value == 'object' || !['number', 'bigint', 'string'].includes(typeof value)) {
         processedData[key] = value;
       }
 
       else if (['number', 'bigint'].includes(typeof value)) {
         processedData[key] = new anchor.BN(value.toString())
-      } 
+      }
 
       else if (isValidPublicKey(value)) {
          processedData[key] = new PublicKey(value)
       }
 
       else if (value === 'signer' || value === 'payer') {
-        
+
         processedData[key] = provider.wallet.publicKey;
-      
+
       } else if (value === 'systemProgram') {
-        
+
         processedData[key] = SystemProgram.programId;
-      
+
       } else if (value === 'rent') {
-        
+
         processedData[key] = SYSVAR_RENT_PUBKEY;
 
       } else if (typeof value === 'string' && value.startsWith('new:')) {
-        
+
         const keypair = Keypair.generate();
         processedData[key] = keypair.publicKey;
 
@@ -281,23 +289,23 @@ const processPlaceholders = (
         }
 
       } else if (typeof value === 'string' && value.startsWith('pda:')) {
-        
-        const processPda = (str: string) => { 
-          
+
+        const processPda = (str: string) => {
+
           let newStr = str.replace(/^pda:/, "");
 
           const seeds = newStr.split(',');
 
           const seedBuffers: any[] = seeds.map((s: any)=> {
-            if (s === 'signer') { 
-              return provider.wallet.publicKey.toBuffer(); 
+            if (s === 'signer') {
+              return provider.wallet.publicKey.toBuffer();
             } else if(typeof s == 'string' && s.startsWith("pda:")) {
               return processPda(s).toBuffer()
             } else {
               return Buffer.from(s);
             }
           });
-          
+
           const [pda] = PublicKey.findProgramAddressSync(
             seedBuffers,
             program.programId
@@ -307,7 +315,7 @@ const processPlaceholders = (
         }
 
         processedData[key] = processPda(value);
-      
+
       }
       else {
 
@@ -322,7 +330,7 @@ const processPlaceholders = (
        console.error(`processPlaceholders: processing ${placeholderType} error for: ${key}: ${value}`)
       throw e;
     }
-  
+
   } //end loop
 
   return processedData;

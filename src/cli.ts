@@ -3,10 +3,10 @@
  * @file cli.ts
  * @description Command-line interface for RocketAnchor. Provides CLI commands
  * for deployment, seeding, building, testing, and initialization.
- * 
+ *
  * @author Ra <ra@maxxpainn.com>
  * @created 2025-11-10
- * 
+ *
  * License: MIT
  */
 
@@ -39,9 +39,9 @@ program
   .action(async (options: DeployOptions) => {
     try {
       logger.header('Rocket Anchor Deployment');
-      
+
       const config = await loadConfig();
-      
+
       if (!config.networks[options.network]) {
         logger.error(`Network "${options.network}" not found in ra.config.ts`);
         logger.info('Available networks:', Object.keys(config.networks).join(', '));
@@ -49,7 +49,7 @@ program
       }
 
       const results = await deploy(config, options.network, options);
-      
+
       logger.success('\nDeployment Summary:');
       results.forEach(result => {
         if (result.success) {
@@ -81,9 +81,9 @@ program
   .action(async (options) => {
     try {
       logger.header('Seeding Programs');
-      
+
       const config = await loadConfig();
-      
+
       if (!config.networks[options.network]) {
         logger.error(`Network "${options.network}" not found in ra.config.ts`);
         process.exit(1);
@@ -93,7 +93,7 @@ program
         program: options.program,
         seedScript: options.script,
       });
-      
+
       logger.success('\n✅ Seeding completed successfully!');
     } catch (error) {
       logger.error('\n❌ Seeding failed:', error);
@@ -107,10 +107,11 @@ program
   .action(async () => {
     const fs = await import('fs');
     const path = await import('path');
-    
+
     const configTemplate = `import type { RAConfig } from 'rocket-anchor';
 
 const config: RAConfig = {
+  programName: '',
   networks: {
     solana_localnet: {
       url: 'http://127.0.0.1:8899',
@@ -144,7 +145,7 @@ export default config;
 `;
 
     const configPath = path.join(process.cwd(), 'ra.config.ts');
-    
+
     if (fs.existsSync(configPath)) {
       logger.error('ra.config.ts already exists!');
       process.exit(1);
@@ -161,7 +162,7 @@ program
   .action(async (options) => {
     const { execSync } = await import('child_process');
     logger.info('📦 Building Anchor programs...');
-    
+
     try {
       const cmd = options.verifiable ? 'anchor build --verifiable' : 'anchor build';
       execSync(cmd, { stdio: 'inherit' });
@@ -179,7 +180,7 @@ program
   .action(async (options) => {
     logger.info(`🧪 Running tests on ${options.network}...`);
     const { execSync } = await import('child_process');
-    
+
     try {
       execSync('anchor test', { stdio: 'inherit' });
       logger.success('✅ Tests passed');

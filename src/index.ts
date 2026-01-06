@@ -3,20 +3,20 @@
  * @file index.ts
  * @description Main entry point for the RocketAnchor deployment toolkit.
  * Provides methods to load configuration, deploy programs, and run seed scripts.
- * 
+ *
  * @author Ra <ra@maxxpainn.com>
  * @created 2025-11-10
- * 
+ *
  * License: MIT
  */
 
 import { DeployOptions, DeployResult, RAConfig } from './types';
 
-export { 
-  RAConfig, 
-  NetworkConfig, 
-  DeployOptions, 
-  ProgramInfo, 
+export {
+  RAConfig,
+  NetworkConfig,
+  DeployOptions,
+  ProgramInfo,
   DeployResult,
   SeedConfig,
   PathsConfig
@@ -51,6 +51,7 @@ export class RocketAnchor {
   }
 
   async seed(network: string, program?: string, seedScript?: string): Promise<void> {
+
     if (!this.config) {
       await this.loadConfig();
     }
