@@ -10,11 +10,10 @@
  * License: MIT
  */
 
-import { AnchorProvider, Program } from '@coral-xyz/anchor';
-import { Commitment } from '@solana/web3.js';
+import { AnchorProvider, Program } from "@coral-xyz/anchor";
+import { Commitment, PublicKey } from "@solana/web3.js";
 
-export type NetworkType = "localnet" | "devnet" | "testnet" | "mainnet"
-
+export type NetworkType = "localnet" | "devnet" | "testnet" | "mainnet";
 
 export interface NetworkConfig {
   url: string;
@@ -23,7 +22,7 @@ export interface NetworkConfig {
   commitment?: Commitment;
   skipPreflight?: boolean;
   websocket?: string;
-  type:   NetworkType
+  type: NetworkType;
 }
 
 export interface PathsConfig {
@@ -73,24 +72,26 @@ export interface DeployResult {
   error?: string;
 }
 
-
 export type SeedConfigFunctionResult = {
   function: string;
   accounts: { [key: string]: any };
   args: any[];
   repeat?: number;
-}
+};
 
 export type SeedConfigFunctionProps = {
-  provider: AnchorProvider,
-  program: Program,
-  programId: string
-}
+  provider: AnchorProvider;
+  program: Program;
+  programId: PublicKey;
+};
 
-export type SeedConfigFunction = (props: SeedConfigFunctionProps) => Promise<SeedConfigFunctionResult>
+export type SeedConfigFunction = (
+  props: SeedConfigFunctionProps,
+) => Promise<SeedConfigFunctionResult>;
 
-export type CustomSeedFunction = (props: SeedConfigFunctionProps) => Promise<void>
-
+export type CustomSeedFunction = (
+  props: SeedConfigFunctionProps,
+) => Promise<void>;
 
 export interface SeedConfig {
   program: string;
